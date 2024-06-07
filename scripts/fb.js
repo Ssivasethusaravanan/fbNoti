@@ -20,7 +20,7 @@ admin.initializeApp({
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-t2qn1%40revol-734dd.iam.gserviceaccount.com",
     "universe_domain": "googleapis.com"
-  })
+  }), databaseURL: "https://revol-734dd-default-rtdb.firebaseio.com"
 });
 
 
