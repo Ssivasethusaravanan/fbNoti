@@ -8,7 +8,9 @@ const { sendPushNotification, schedulePushNotification } = require('./fbno');
 const serviceAccount = require(path.join(__dirname, 'fb.json'));
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://revol-734dd-default-rtdb.firebaseio.com"
+  databaseURL: "https://revol-734dd-default-rtdb.firebaseio.com/"
+
+  // databaseURL: "https://deal2all-dd99f-default-rtdb.firebaseio.com/"
 });
 
 const app = express();
