@@ -46,12 +46,13 @@
 //   console.log(`Server is running on port ${PORT}`);
 // });
 
-
 const admin = require('firebase-admin');
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const crypto = require('crypto'); // Add this for signature verification
+const crypto = require('crypto');
+const http = require('http'); // Add this
+const WebSocket = require('ws'); // Add this - you'll need to install it with npm
 const { sendPushNotification, schedulePushNotification } = require('./fbno');
 
 // Initialize Firebase Admin SDK
@@ -63,6 +64,33 @@ admin.initializeApp({
 
 const app = express();
 app.use(bodyParser.json());
+
+// Create HTTP server from Express app
+const server = http.createServer(app); // Add this
+
+// Create WebSocket server
+const wss = new WebSocket.Server({ server }); // Add this
+
+// Store connected clients
+const clients = new Set(); // Add this
+
+// Handle WebSocket connections
+wss.on('connection', (ws) => {
+  clients.add(ws);
+  console.log('WebSocket client connected');
+  
+  // Send a connection confirmation
+  ws.send(JSON.stringify({ type: 'connection', status: 'connected' }));
+  
+  ws.on('message', (message) => {
+    console.log('Received message from client:', message);
+  });
+  
+  ws.on('close', () => {
+    clients.delete(ws);
+    console.log('WebSocket client disconnected');
+  });
+});
 
 // Route to send push notification
 app.post('/sendPushNotification', async (req, res) => {
@@ -109,6 +137,7 @@ app.post('/api/payments/razorpay-webhook', (req, res) => {
     const event = req.body;
     console.log('Received Razorpay webhook:', event.event);
     
+    // Handle the event based on type
     switch (event.event) {
       case 'payment.authorized':
         handlePaymentAuthorized(event.payload.payment.entity);
@@ -125,6 +154,14 @@ app.post('/api/payments/razorpay-webhook', (req, res) => {
       // Add more event handlers as needed
     }
     
+    // Broadcast the event to all connected WebSocket clients
+    clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        console.log('Forwarding webhook event to WebSocket client');
+        client.send(JSON.stringify(event));
+      }
+    });
+    
     // Return a 200 response to acknowledge receipt
     res.status(200).send({status: 'ok'});
   } else {
@@ -135,6 +172,7 @@ app.post('/api/payments/razorpay-webhook', (req, res) => {
 });
 
 // ======== PAYMENT HANDLERS ========
+// Your existing payment handlers remain unchanged
 async function handlePaymentAuthorized(payment) {
   try {
     // Extract relevant information
@@ -308,8 +346,8 @@ app.post('/api/payments/verify', (req, res) => {
   }
 });
 
-// Start the server
+// Start the server using the HTTP server that has WebSocket support
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.listen(PORT, () => { // Changed from app.listen to server.listen
+  console.log(`Server is running on port ${PORT} with WebSocket support`);
 });
