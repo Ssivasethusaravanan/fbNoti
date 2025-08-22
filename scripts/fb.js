@@ -46,6 +46,8 @@
 //   console.log(`Server is running on port ${PORT}`);
 // });
 
+
+
 const admin = require('firebase-admin');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -347,7 +349,7 @@ app.post('/api/payments/verify', (req, res) => {
 });
 
 // Start the server using the HTTP server that has WebSocket support
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3080;
 server.listen(PORT, () => { // Changed from app.listen to server.listen
   console.log(`Server is running on port ${PORT} with WebSocket support`);
 });
